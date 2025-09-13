@@ -1,9 +1,17 @@
-# AI/ML Chatbot for Data Queries with NLP
+# AI/ML Chatbot for Data Queries
 
-**Description:**  
-This chatbot uses a simple ML/NLP model to detect the intent of the query (Score or Grade) and fetch the requested student data. The dataset contains 200 students.  
+## Overview
+This project implements an AI/ML-based chatbot capable of answering student data-related queries, such as scores, grades, and performance insights. The chatbot uses **Natural Language Processing (NLP)** techniques to understand user intents and respond accurately.
 
-**How to Run:**  
-1. Install dependencies:  
-```bash
-pip install -r requirements.txt
+---
+
+## Features
+- Understands natural language queries about student scores and grades.
+- Provides responses based on a structured dataset (`students_data.csv`).
+- Includes a Python script for dataset generation (`dataset.py`).
+- Modular project structure with separate folders for scripts and data.
+- Easy to extend for additional queries or datasets.
+
+---
+
+## Project Structure
