@@ -1,62 +1,65 @@
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+import re
 
-# Load the dataset
+# Load dataset
 data = pd.read_csv('../data/students_data.csv')
 
-print("Welcome to the AI/ML Data Query Chatbot!")
+# Training sample queries
+training_queries = [
+    "Score of Alice", "Grade of Bob",
+    "Score of Student1", "Grade of Student200",
+    "What is the score of Student45?", "Tell me the grade of Student99"
+]
+
+training_labels = [
+    "score", "grade",
+    "score", "grade",
+    "score", "grade"
+]
+
+# Vectorize text
+vectorizer = CountVectorizer()
+X_train = vectorizer.fit_transform(training_queries)
+
+# Train simple classifier
+clf = LogisticRegression()
+clf.fit(X_train, training_labels)
+
+print("Welcome to AI/ML Chatbot with NLP!")
 print("You can ask for a student's Score or Grade by Name or ID.")
-print("Examples: 'Score of Student23', 'Grade of ID 45'")
 print("Type 'exit' to quit.\n")
 
 while True:
-    query = input("Your query: ").strip().lower()
-    
-    if query == 'exit':
+    query = input("Your query: ").strip()
+    if query.lower() == "exit":
         print("Goodbye!")
         break
 
-    # Search by Name
-    if 'score of' in query:
-        if 'id' in query:
-            # By ID
-            try:
-                student_id = int(query.split('id')[-1].strip())
-                result = data[data['StudentID'] == student_id]['Score']
-                if not result.empty:
-                    print(f"Score of Student ID {student_id}: {result.values[0]}")
-                else:
-                    print("Student ID not found.")
-            except:
-                print("Invalid ID format.")
-        else:
-            # By Name
-            name = query.split('score of')[-1].strip().capitalize()
-            result = data[data['Name'] == name]['Score']
-            if not result.empty:
-                print(f"Score of {name}: {result.values[0]}")
-            else:
-                print("Student Name not found.")
+    # Predict intent
+    X_test = vectorizer.transform([query])
+    intent = clf.predict(X_test)[0]
 
-    elif 'grade of' in query:
-        if 'id' in query:
-            # By ID
-            try:
-                student_id = int(query.split('id')[-1].strip())
-                result = data[data['StudentID'] == student_id]['Grade']
-                if not result.empty:
-                    print(f"Grade of Student ID {student_id}: {result.values[0]}")
-                else:
-                    print("Student ID not found.")
-            except:
-                print("Invalid ID format.")
-        else:
-            # By Name
-            name = query.split('grade of')[-1].strip().capitalize()
-            result = data[data['Name'] == name]['Grade']
-            if not result.empty:
-                print(f"Grade of {name}: {result.values[0]}")
-            else:
-                print("Student Name not found.")
+    # Extract Name or ID using regex
+    id_match = re.search(r'\b\d+\b', query)
+    name_match = re.search(r'Student\d+|[A-Z][a-z]+', query)
 
+    if id_match:
+        student_id = int(id_match.group())
+        student_data = data[data['StudentID'] == student_id]
+    elif name_match:
+        student_name = name_match.group()
+        student_data = data[data['Name'] == student_name]
     else:
-        print("I can only provide Score or Grade. Try again.")
+        student_data = pd.DataFrame()
+
+    if student_data.empty:
+        print("Student not found.")
+    else:
+        if intent == "score":
+            print(f"{student_data['Name'].values[0]}'s Score: {student_data['Score'].values[0]}")
+        elif intent == "grade":
+            print(f"{student_data['Name'].values[0]}'s Grade: {student_data['Grade'].values[0]}")
+        else:
+            print("Sorry, I can only provide Score or Grade.")
