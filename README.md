@@ -1,7 +1,7 @@
-# AI/ML Chatbot for Data Queries
+# AI/ML Chatbot for Data Queries with NLP
 
 **Description:**  
-This project is a chatbot that answers data queries about students. It can return the **Score** or **Grade** of a student using their **Name** or **Student ID**.  
+This chatbot uses a simple ML/NLP model to detect the intent of the query (Score or Grade) and fetch the requested student data. The dataset contains 200 students.  
 
 **How to Run:**  
 1. Install dependencies:  
