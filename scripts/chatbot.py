@@ -4,62 +4,92 @@ from sklearn.linear_model import LogisticRegression
 import re
 
 # Load dataset
-data = pd.read_csv('../data/students_data.csv')
+data = pd.read_csv("students_data.csv")
+data['Name'] = data['Name'].str.lower()
 
-# Training sample queries
+# Training data (INTENTS)
 training_queries = [
-    "Score of Alice", "Grade of Bob",
-    "Score of Student1", "Grade of Student200",
-    "What is the score of Student45?", "Tell me the grade of Student99"
+    "score of student1",
+    "grade of student2",
+    "average score",
+    "maximum score",
+    "minimum score",
+    "how many students",
+    "top five students",
+    "bottom five students"
 ]
 
 training_labels = [
-    "score", "grade",
-    "score", "grade",
-    "score", "grade"
+    "score",
+    "grade",
+    "average",
+    "max",
+    "min",
+    "count",
+    "top5",
+    "bottom5"
 ]
 
-# Vectorize text
+# Vectorizer & Model
 vectorizer = CountVectorizer()
 X_train = vectorizer.fit_transform(training_queries)
 
-# Train simple classifier
-clf = LogisticRegression()
+clf = LogisticRegression(max_iter=1000)
 clf.fit(X_train, training_labels)
 
-print("Welcome to AI/ML Chatbot with NLP!")
-print("You can ask for a student's Score or Grade by Name or ID.")
+print("📊 Advanced Student Analytics Chatbot")
+print("Ask about scores, grades, averages, top students, etc.")
 print("Type 'exit' to quit.\n")
 
 while True:
-    query = input("Your query: ").strip()
-    if query.lower() == "exit":
+    query = input("Your query: ").strip().lower()
+    if query == "exit":
         print("Goodbye!")
         break
 
-    # Predict intent
-    X_test = vectorizer.transform([query])
-    intent = clf.predict(X_test)[0]
+    intent = clf.predict(vectorizer.transform([query]))[0]
 
-    # Extract Name or ID using regex
-    id_match = re.search(r'\b\d+\b', query)
-    name_match = re.search(r'Student\d+|[A-Z][a-z]+', query)
+    # Student-specific queries
+    name_match = re.search(r'student\d+', query)
 
-    if id_match:
-        student_id = int(id_match.group())
-        student_data = data[data['StudentID'] == student_id]
-    elif name_match:
-        student_name = name_match.group()
-        student_data = data[data['Name'] == student_name]
-    else:
-        student_data = pd.DataFrame()
+    # ---- INDIVIDUAL QUERIES ----
+    if intent in ["score", "grade"]:
+        if name_match:
+            student_name = name_match.group()
+            student_data = data[data['Name'] == student_name]
 
-    if student_data.empty:
-        print("Student not found.")
-    else:
-        if intent == "score":
-            print(f"{student_data['Name'].values[0]}'s Score: {student_data['Score'].values[0]}")
-        elif intent == "grade":
-            print(f"{student_data['Name'].values[0]}'s Grade: {student_data['Grade'].values[0]}")
+            if student_data.empty:
+                print("Student not found.")
+            else:
+                if intent == "score":
+                    print(f"{student_name.upper()} Score: {student_data['Score'].values[0]}")
+                else:
+                    print(f"{student_name.upper()} Grade: {student_data['Grade'].values[0]}")
         else:
-            print("Sorry, I can only provide Score or Grade.")
+            print("Please specify a student (e.g., student1).")
+
+    # ---- DATA ANALYTICS QUERIES ----
+    elif intent == "average":
+        print(f"📈 Average Score: {data['Score'].mean():.2f}")
+
+    elif intent == "max":
+        top = data.loc[data['Score'].idxmax()]
+        print(f"🏆 Highest Score: {top['Name'].upper()} → {top['Score']}")
+
+    elif intent == "min":
+        low = data.loc[data['Score'].idxmin()]
+        print(f"⬇️ Lowest Score: {low['Name'].upper()} → {low['Score']}")
+
+    elif intent == "count":
+        print(f"👥 Total Students: {len(data)}")
+
+    elif intent == "top5":
+        print("🏅 Top 5 Students:")
+        print(data.nlargest(5, 'Score')[['Name', 'Score']])
+
+    elif intent == "bottom5":
+        print("🔻 Bottom 5 Students:")
+        print(data.nsmallest(5, 'Score')[['Name', 'Score']])
+
+    else:
+        print("Sorry, I didn’t understand that.")
